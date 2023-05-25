@@ -1,12 +1,4 @@
-"""
-	Function: Run training and test processes for source source localization on simulated dataset
 
-    Reference: Bing Yang, Hong Liu, and Xiaofei Li, “SRP-DNN: Learning Direct-Path Phase Difference for Multiple Moving Sound Source Localization,” 
-	IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP), 2022, pp. 721–725.
-	Author:    Bing Yang
-    History:   2022-07-01 - Initial version
-    Copyright Bing Yang
-"""
 import os
 from Opt import opt
 
