@@ -1,5 +1,5 @@
 # FN-SSL
-A pyTorch implementation of "FN-SSL: Full-Band and Narrow-Band Fusion for Sound Source Localization", INTERSPEECH, 2023. (A simple version, more detailed introduction will be updated soon)
+A python implementation of "FN-SSL: Full-Band and Narrow-Band Fusion for Sound Source Localization", INTERSPEECH, 2023. (A simple version, more detailed introduction will be updated soon)
 
 ## Datasets
 + **Source signals**: from <a href="http://www.openslr.org/12/" target="_blank">LibriSpeech database</a> 
