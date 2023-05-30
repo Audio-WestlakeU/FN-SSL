@@ -19,7 +19,7 @@ import Learner as at_learner
 import Model as at_model
 import Module as at_module
 from Dataset import Parameter
-from utils import set_seed, set_random_seed
+from utils import set_seed, set_random_seed,locata_plot
 import math
 from torch.utils.data import DataLoader
 if __name__ == "__main__":
@@ -46,52 +46,61 @@ if __name__ == "__main__":
 	tar_useVAD = True
 	ch_mode = 'MM' 
 	res_the = 37 # Maps resolution (elevation) 
-	res_phi = 73 # Maps resolution (azimuth) 
+	res_phi = 73 # Maps resolution (azimuth) 73/5°；
 
 	net = at_model.LSTM_19()
-	# from torchsummary import summary
-	# summary(net,input_size=(4,256,100),batch_size=55,device="cpu")
+
 	print('# Parameters:', sum(param.numel() for param in net.parameters())/1000000, 'M')
 
 	learner = at_learner.SourceTrackingFromSTFTLearner(net, win_len=win_len, win_shift_ratio=win_shift_ratio, nfft=nfft, fre_used_ratio=fre_used_ratio,
 				nele=res_the, nazi=res_phi, rn=array_setup.mic_pos, fs=fs, ch_mode = ch_mode, tar_useVAD = tar_useVAD, localize_mode = args.localize_mode)
-	test_path = ["Your_test_data_path"]
-	bsize = 50
-	for path in test_path:
-				#print(path)
-		dataset_test = at_dataset.FixTrajectoryDataset(
-			data_dir=path,
-            dataset_sz =5000,
-            transforms=[segmenting]
-            )
-		dataloader_test = DataLoader(dataset=dataset_test, # 传入的数据集, 必须参数
-            batch_size=bsize,       # 输出的batch大小
-            shuffle=False,       # 数据是否打乱
-            num_workers=8)                
-		print(path)
-		print('Test Stage!')
-            # Mode selection
-		dataset_mode = 'simulate' # use cuda, use amp
-                # dataset_mode = 'locata' # use no-cuda
-		method_mode = args.localize_mode[0]
-		source_num_mode = args.localize_mode[1]
+	
+	
+	if len(args.gpu_id)>1:
+		learner.mul_gpu()
+	if use_cuda:
+		learner.cuda()
+	else:
+		learner.cpu()
+	if args.use_amp:
+		learner.amp()
+	learner.resume_checkpoint(checkpoints_dir='/exp/04231627/', from_latest=False)
+	
+	dataset_mode = 'simulate'
+	if dataset_mode == 'simulate':
+		test_path = [dirs['sensig_test']]
+		bsize = 50
+		for path in test_path:
+			dataset_test = at_dataset.FixTrajectoryDataset(
+				data_dir=path,
+				dataset_sz =5000,
+				transforms=[segmenting]
+				)
+			dataloader_test = DataLoader(dataset=dataset_test, 
+				batch_size=bsize,       
+				shuffle=False,       
+				num_workers=8)                
+			print('Test Stage!')
+				# Mode selection
+			loss_test, metric_test = learner.test_epoch(dataloader_test, return_metric=True)
+			print(loss_test, metric_test)
 
+	elif dataset_mode == 'locata':
+		array_locata_name = 'dicit'
+		tasks = ((3,5), )
+		path_locata = (dirs['sensig_locata'] + '/eval',dirs['sensig_locata'] + '/dev')
+		ntask = len(tasks)
+		dataset_locata = at_dataset.LocataDataset(path_locata, array_locata_name, fs, dev=True, tasks=tasks[0], transforms=[segmenting])
+		nins = len(dataset_locata)
 		nmetric = 2
-		if len(args.gpu_id)>1:
-			learner.mul_gpu()
-		if use_cuda:
-			learner.cuda()
-		else:
-			learner.cpu()
-		if args.use_amp:
-			learner.amp()
-		learner.resume_checkpoint(checkpoints_dir='Your_checkpoint_path', from_latest=False)
-				#learner.resume_checkpoint(checkpoints_dir='/data/home/wangyabo/ICASSP23/0730_LR_single_metric/exp/08021303', from_latest=False)
-
-		loss_test, metric_test = learner.test_epoch(dataloader_test, return_metric=True)
-		print(loss_test, metric_test)
-
-
-
-
-	 
+		metrics = np.zeros((nmetric, nins, ntask))
+		metric_setting = {'ae_mode':['azi'], 'ae_TH':30, 'useVAD':True, 'vad_TH':[2/3, 0.2], 'metric_unfold':False}
+		save_file = True
+		for task in tasks:
+			task_idx = tasks.index(task)
+			t_start = time.time()
+			dataset_locata = at_dataset.LocataDataset(path_locata, array_locata_name, fs, dev=True, tasks=task, transforms=[segmenting])
+			dataloader = DataLoader(dataset=dataset_locata, batch_size=1, shuffle=False)			
+			pred, gt, _,metric = learner.predict(dataloader, return_predgt=True, metric_setting=metric_setting, wDNN=True,save_file=save_file)
+			print(torch.mean(metric['MAE']),torch.mean(metric['ACC']))
+		locata_plot(result_path='./locata_result/', save_fig_path='./locata_result/')
