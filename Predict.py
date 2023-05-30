@@ -48,7 +48,7 @@ if __name__ == "__main__":
 	res_the = 37 # Maps resolution (elevation) 
 	res_phi = 73 # Maps resolution (azimuth) 73/5°；
 
-	net = at_model.LSTM_19()
+	net = at_model.FN_SSL()
 
 	print('# Parameters:', sum(param.numel() for param in net.parameters())/1000000, 'M')
 
