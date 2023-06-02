@@ -66,10 +66,8 @@ if __name__ == "__main__":
 		learner.amp()
 	learner.resume_checkpoint(checkpoints_dir='/exp/04231627/', from_latest=False)
 	
-	dataset_mode = 'simulate'
-	if dataset_mode == 'simulate':
+	if args.datasetMode == 'simulate':
 		test_path = [dirs['sensig_test']]
-		bsize = 50
 		for path in test_path:
 			dataset_test = at_dataset.FixTrajectoryDataset(
 				data_dir=path,
@@ -77,7 +75,7 @@ if __name__ == "__main__":
 				transforms=[segmenting]
 				)
 			dataloader_test = DataLoader(dataset=dataset_test, 
-				batch_size=bsize,       
+				batch_size=args.bz[2],       
 				shuffle=False,       
 				num_workers=8)                
 			print('Test Stage!')
@@ -85,7 +83,7 @@ if __name__ == "__main__":
 			loss_test, metric_test = learner.test_epoch(dataloader_test, return_metric=True)
 			print(loss_test, metric_test)
 
-	elif dataset_mode == 'locata':
+	elif args.datasetMode  == 'locata':
 		array_locata_name = 'dicit'
 		tasks = ((3,5), )
 		path_locata = (dirs['sensig_locata'] + '/eval',dirs['sensig_locata'] + '/dev')
