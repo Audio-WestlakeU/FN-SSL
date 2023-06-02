@@ -1,0 +1,12 @@
+--data
+------train
+------dev
+------test
+------LOCATA
+------LibriSpeech
+       ------train-clean-100
+       ------test-clean
+       ------dev-clean
+------NoiSig
+       ------Noise92
+
