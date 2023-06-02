@@ -2,7 +2,7 @@
 A python implementation of "FN-SSL: Full-Band and Narrow-Band Fusion for Sound Source Localization" (paper: https://arxiv.org/pdf/2305.19610.pdf), INTERSPEECH, 2023. (A simple version, more detailed introduction will be updated soon)
 
 + **Contributions** 
-  - Full-Band and Narrow-Band Fusion for moving sound source localization, Following image is the Comparison results on the LOCATA dataset.
+  - Full-Band and Narrow-Band Fusion for moving sound source localization,
 + **Extension to microphone array with the number of microphones larger than two**: 
   - for DP-IPD regression:
   - for DOA classification:
