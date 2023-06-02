@@ -14,7 +14,7 @@ A python implementation of "FN-SSL: Full-Band and Narrow-Band Fusion for Sound S
   
 ## Quick start
 + **Preparation**
- simulate dataset: python Simu.py --train/--test/--dev,
+
 + **Training**
 
 + **Evaluation**
