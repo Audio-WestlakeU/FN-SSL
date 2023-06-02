@@ -1,5 +1,5 @@
 # FN-SSL
-A python implementation of "FN-SSL: Full-Band and Narrow-Band Fusion for Sound Source Localization", INTERSPEECH, 2023. (A simple version, more detailed introduction will be updated soon)
+A python implementation of "FN-SSL: Full-Band and Narrow-Band Fusion for Sound Source Localization" (paper: https://arxiv.org/pdf/2305.19610.pdf), INTERSPEECH, 2023. (A simple version, more detailed introduction will be updated soon)
 
 + **Contributions** 
   - Full-Band and Narrow-Band Fusion
