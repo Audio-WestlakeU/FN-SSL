@@ -66,6 +66,10 @@ class opt():
         dirs['sousig_train'] = dirs['data'] + '/LibriSpeech/train-clean-100'
         dirs['sousig_test'] = dirs['data'] + '/LibriSpeech/test-clean'
         dirs['sousig_dev'] = dirs['data'] + '/LibriSpeech/dev-clean'
+        # noise data
+        dirs['noisig_train'] = dirs['data'] + '/NoiSig/Noise92'
+        dirs['noisig_test'] = dirs['data'] + '/NoiSig/Noise92'
+        dirs['noisig_dev'] = dirs['data'] + '/NoiSig/Noise92'
         # experimental data
         dirs['sensig_train'] = dirs['data'] + '/train'
         dirs['sensig_test'] = dirs['data'] + '/test'
