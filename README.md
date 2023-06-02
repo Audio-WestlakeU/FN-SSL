@@ -2,8 +2,7 @@
 A python implementation of "FN-SSL: Full-Band and Narrow-Band Fusion for Sound Source Localization" (paper: https://arxiv.org/pdf/2305.19610.pdf), INTERSPEECH, 2023. (A simple version, more detailed introduction will be updated soon)
 
 + **Contributions** 
-  - Full-Band and Narrow-Band Fusion
-
+  - Full-Band and Narrow-Band Fusion for moving sound source localization
 + **Extension to microphone array with the number of microphones larger than two**: 
   - for DP-IPD regression:
   - for DOA classification:
@@ -13,11 +12,29 @@ A python implementation of "FN-SSL: Full-Band and Narrow-Band Fusion for Sound S
 + **Real-world multi-channel microphone signals**: from <a href="https://www.locata.lms.tf.fau.de/datasets/" target="_blank">LOCATA database</a> 
   
 ## Quick start
-+ **Preparation**
++ **Preparation** 
 
+Generate multi-channel data, You can set **data_num (in Simu.py)** to control the size of the dataset.
+```
+python Simu.py --train/--test/--dev
+```
 + **Training**
+```
+python Train.py --train --gpu-id [*] --bz * * * 
+```
 
-+ **Evaluation**
++ **Evaluation** 
+  
+for simulated data evaluation
+```
+python Predict.py --test --datasetMode simulate --bz * * *
+```
+  
+  for LOCATA dataset evaluation
+ 
+```
+python Predict.py --test --datasetMode locata
+```
  
 + **Pretrained models**
 
