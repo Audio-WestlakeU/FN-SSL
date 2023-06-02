@@ -25,6 +25,7 @@ class opt():
         parser.add_argument('--seed', type=int, default=1, metavar='Seed', help='random seed (default: 1)')
         parser.add_argument('--train', action='store_true', default=False, help='change to train stage (default: False)')
         parser.add_argument('--test', action='store_true', default=False, help='change to test stage (default: False)')
+        parser.add_argument('--dev', action='store_true', default=False, help='change to test stage (default: False)')
         parser.add_argument('--checkpoint-start', action='store_true', default=False, help='train model from saved checkpoints (default: False)')
         parser.add_argument('--time', type=str, default=self.time, metavar='Time', help='time flag')
     
@@ -39,13 +40,14 @@ class opt():
         # parser.add_argument('--gpu-call-bz', type=int, default=1, metavar='GPUCallBatch', help='batch size of each gpu call (default: 2)')
         parser.add_argument('--epochs', type=int, default=100, metavar='Epoch', help='number of epochs to train (default: 100)')
         parser.add_argument('--lr', type=float, default=0.001, metavar='LR', help='learning rate (default:0.001)')
+        parser.add_argument('--datasetMode', type=str, default='simulate', metavar='datasetMode', help='select dataset (default:simulate)')
                    
         # parser.add_argument('--data-random', action='store_true', default=False, help='random condition for training data (default: False)')
             
         args = parser.parse_args()
         self.time = args.time
 
-        if (args.train + args.test)!=1:
+        if (args.train + args.test + args.dev)!=1:
             raise Exception('Stage of train or test is unrecognized')
 
         return args
@@ -53,22 +55,22 @@ class opt():
     def dir(self):
         """ Function: Get directories of code, data and experimental results
         """ 
-        work_dir = r'~'
+        work_dir = r'.'
         work_dir = os.path.abspath(os.path.expanduser(work_dir))
         dirs = {}
 
-        dirs['code'] = work_dir + '/ICASSP23/97_new/exp1'
-        dirs['data'] = work_dir + '/ICASSP23/data'
-        dirs['exp'] = work_dir + '/ICASSP23/new_exp/exp3_lr2/exp'
+        dirs['data'] = work_dir + '/data'
+        dirs['exp'] = work_dir + '/exp'
 
         # source data
-        #dirs['sensig_train'] = dirs['data'] + '/SouSig/LibriSpeech/train-gen'
-        dirs['sensig_train'] = dirs['data'] + '/SouSig/LibriSpeech/train-diffuse-20w'
-        dirs['sensig_test'] = dirs['data'] + '/SouSig/LibriSpeech/test-diffuse_mix_5000'
-        #dirs['sensig_dev'] = dirs['data'] + '/SouSig/LibriSpeech/dev-clean-gen'
-        #dirs['sensig_test'] = dirs['data'] + '/SouSig/LibriSpeech/test-clean-gen-diffuse'
-        dirs['sensig_dev'] = dirs['data'] + '/SouSig/LibriSpeech/dev-20w'
+        dirs['sousig_train'] = dirs['data'] + '/LibriSpeech/train-clean-100'
+        dirs['sousig_test'] = dirs['data'] + '/LibriSpeech/test-clean'
+        dirs['sousig_dev'] = dirs['data'] + '/LibriSpeech/dev-clean'
         # experimental data
+        dirs['sensig_train'] = dirs['data'] + '/train'
+        dirs['sensig_test'] = dirs['data'] + '/test'
+        dirs['sensig_dev'] = dirs['data'] + '/dev'
+        dirs['sensig_locata'] = dirs['data'] + '/LOCATA'
         dirs['log'] = dirs['exp'] + '/' + self.time
 
         return dirs
