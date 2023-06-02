@@ -35,7 +35,10 @@ python Predict.py --test --datasetMode simulate --bz * * *
 ```
 python Predict.py --test --datasetMode locata
 ```
- 
++ **Pytorch Lightning version**
+
+We have re implemented FN-SSL using the Pytorch-lightning framework, which has a improvement in training speed compared to the torch.
+
 + **Pretrained models**
 
 
