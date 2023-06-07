@@ -313,7 +313,7 @@ class Learner(ABC):
 
 		if from_latest:
 
-			latest_model_path = checkpoints_dir + "/last2.ckpt"
+			latest_model_path = checkpoints_dir + "/lightning.ckpt"
 
 			assert os.path.exists(latest_model_path), f"{latest_model_path} does not exist, can not load latest checkpoint."
 
@@ -342,14 +342,9 @@ class Learner(ABC):
 			# device = {'cuda:%d' % 0: 'cuda:%d' % self.rank}
 			checkpoint = torch.load(best_model_path, map_location=self.device)
 
-			epoch = checkpoint["epoch"]
-			# self.max_score = checkpoint["max_score"]
-			#self.optimizer.load_state_dict(checkpoint["optimizer"])
-			# self.scaler.load_state_dict(checkpoint["scaler"])
 			self.model.load_state_dict(checkpoint["model"])
 
-			# if self.rank == 0:
-			print(f"Best model at {epoch} epoch loaded.")
+
 
 
 class SourceTrackingFromSTFTLearner(Learner):
