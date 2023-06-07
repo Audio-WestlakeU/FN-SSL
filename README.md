@@ -42,9 +42,10 @@ We have re implemented FN-SSL using the Pytorch-lightning framework, which has a
 + **Pretrained models**
 
 Using the FN_lightning model to load the lightning checkpoint in torch framework.
-```
-[Lightning] Direct-IPD estimation checkpoint: https://pan.baidu.com/s/1zRKpiqbSuo80Xu5ZRoS1gQ?pwd=6w51
-```
+|Framework | target | checkpoint |
+| --- | --- | --- |
+| Lightning | DP-IPD | https://pan.baidu.com/s/1zRKpiqbSuo80Xu5ZRoS1gQ?pwd=6w51 |
+
 more checkpoints will be update soon.
 
 ## Citation
