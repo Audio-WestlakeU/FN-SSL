@@ -41,6 +41,7 @@ We have re implemented FN-SSL using the Pytorch-lightning framework, which has a
 
 + **Pretrained models**
 
+[Lightning] Direct-IPD estimation checkpoint: https://pan.baidu.com/s/1zRKpiqbSuo80Xu5ZRoS1gQ?pwd=6w51
 
 ## Citation
 If you find our work useful in your research, please consider citing:
