@@ -84,6 +84,14 @@ class FN_SSL(nn.Module):
         ipd_final = torch.cat((ipd_real,ipd_image),dim=2)
         return ipd_final
 
+class FN_lightning(nn.Module):
+    def __init__(self):
+        """the block of full-band and narrow-band fusion
+        """
+        super(FN_lightning, self).__init__()
+        self.arch = FN_SSL()
+    def forward(self,x):
+        return self.arch(x)
     
 
 if __name__ == "__main__":
