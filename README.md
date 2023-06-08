@@ -49,8 +49,8 @@ We have re implemented FN-SSL using the Pytorch-lightning framework, which has a
 Using the FN_lightning model to load the lightning checkpoint in torch framework.
 | Framework | target | checkpoint |
 | --- | --- | --- |
-| Lightning | DP-IPD | https://pan.baidu.com/s/1zRKpiqbSuo80Xu5ZRoS1gQ?pwd=6w51 |
-| Lightning | DOA | https://pan.baidu.com/s/1U1Wl5ZBZBItc2Vku7AyqNA?pwd=ceqm |
+| Lightning | DP-IPD regression | https://pan.baidu.com/s/1zRKpiqbSuo80Xu5ZRoS1gQ?pwd=6w51 |
+| Lightning | DOA classification | https://pan.baidu.com/s/1U1Wl5ZBZBItc2Vku7AyqNA?pwd=ceqm |
 
 more checkpoints will be update soon.
 
