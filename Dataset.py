@@ -1,13 +1,11 @@
 import numpy as np
 import os
-import math
 import scipy
 import scipy.io
 import scipy.signal
-import random
-# import librosa
 import soundfile
 import pandas
+import random
 import warnings
 from copy import deepcopy
 from collections import namedtuple
@@ -15,7 +13,7 @@ from torch.utils.data import Dataset
 import matplotlib.pyplot as plt
 from matplotlib import animation
 import webrtcvad
-#import gpuRIR
+import gpuRIR
 from utils import load_file
 
 # %% Util functions
@@ -36,7 +34,6 @@ def acoustic_power(s):
 	th = 0.01 * window_power.max()  # Threshold for silent detection
 	return np.mean(window_power[np.nonzero(window_power > th)])
 
-
 def cart2sph(cart):
 	xy2 = cart[:,0]**2 + cart[:,1]**2
 	sph = np.zeros_like(cart)
@@ -44,7 +41,6 @@ def cart2sph(cart):
 	sph[:,1] = np.arctan2(np.sqrt(xy2), cart[:,2]) # Elevation angle defined from Z-axis down
 	sph[:,2] = np.arctan2(cart[:,1], cart[:,0])
 	return sph
-
 
 # %% Util classes
 
@@ -79,22 +75,40 @@ class Parameter:
 			idx = np.random.randint(0, len(self.value_range))
 			return self.value_range[idx]
 
-
-# !!! mic_scale should be 1, due to the 'mic_pos' parameter given in learner
 ArraySetup = namedtuple('ArraySetup', 'arrayType, orV, mic_scale, mic_pos, mic_orV, mic_pattern')
 
-# Named tuple with the characteristics of a microphone array and definitions of dual-channel array
 dualch_array_setup = ArraySetup(arrayType='planar', 
-    orV = np.array([0.0, 1.0, 0.0]), # ??? put the source in oneside (indicated by orV) of the array
-	mic_scale = Parameter(1), # !!! half of the mic_distance should be smaller than the minimum separation between the array and the walls defined by array_pos
+    orV = np.array([0.0, 1.0, 0.0]), 
+	mic_scale = Parameter(1), 
 	mic_pos = np.array(((
 			(-0.04, 0.0, 0.0),
 			(0.04, 0.0, 0.0),
-	))), # Actural position is mic_scale*mic_pos
-	mic_orV = None, # Invalid for omnidirectional microphones
+	))), 
+	mic_orV = None, 
 	mic_pattern = 'omni'
 )
 
+dicit_array_setup = ArraySetup(arrayType='planar',
+    orV = np.array([0.0, 1.0, 0.0]),
+	mic_scale = Parameter(1),
+    mic_pos = np.array((( 0.96, 0.00, 0.00),
+						( 0.64, 0.00, 0.00),
+						( 0.32, 0.00, 0.00),
+						( 0.16, 0.00, 0.00),
+						( 0.08, 0.00, 0.00),
+						( 0.04, 0.00, 0.00),
+						( 0.00, 0.00, 0.00),
+						( 0.96, 0.00, 0.32),
+						(-0.04, 0.00, 0.00),
+						(-0.08, 0.00, 0.00),
+						(-0.16, 0.00, 0.00),
+						(-0.32, 0.00, 0.00),
+						(-0.64, 0.00, 0.00),
+						(-0.96, 0.00, 0.00),
+						(-0.96, 0.00, 0.32))),
+    mic_orV = np.tile(np.array([[0.0, 1.0, 0.0]]), (15,1)),
+    mic_pattern = 'omni'
+)
 
 class AcousticScene:
 	""" Acoustic scene class.
@@ -130,27 +144,12 @@ class AcousticScene:
 			if self.T60 < 0.15: Tdiff = Tmax # Avoid issues with too short RIRs
 			nb_img = gpuRIR.t2n( Tdiff, self.room_sz )
 
-		# nb_mics  = len(self.mic_pos)
-		# nb_traj_pts = len(self.traj_pts)
-		# nb_gpu_calls = min(int(np.ceil( self.fs * Tdiff * nb_mics * nb_traj_pts * np.prod(nb_img) / 1e9 )), nb_traj_pts)
-		# traj_pts_batch = np.ceil( nb_traj_pts / nb_gpu_calls * np.arange(0, nb_gpu_calls+1) ).astype(int)
-
 		num_source = self.traj_pts.shape[-1]
 		RIRs_sources = []
 		mic_signals_sources = []
 		dp_RIRs_sources = []
 		dp_mic_signals_sources = []
 		for source_idx in range(num_source):
-			# RIRs_list = [ 	gpuRIR.simulateRIR(self.room_sz, self.beta,
-			# 				self.traj_pts[traj_pts_batch[0]:traj_pts_batch[1],:,source_idx], self.mic_pos,
-			# 				nb_img, Tmax, self.fs, Tdiff=Tdiff, orV_rcv=self.array_setup.mic_orV, 
-			# 				mic_pattern=self.array_setup.mic_pattern) ]
-			# for i in range(1,nb_gpu_calls):
-			# 	RIRs_list += [	gpuRIR.simulateRIR(self.room_sz, self.beta,
-			# 					self.traj_pts[traj_pts_batch[i]:traj_pts_batch[i+1],:,source_idx], self.mic_pos,
-			# 					nb_img, Tmax, self.fs, Tdiff=Tdiff, orV_rcv=self.array_setup.mic_orV, 
-			# 					mic_pattern=self.array_setup.mic_pattern) ]
-			# RIRs = np.concatenate(RIRs_list, axis=0)
 			RIRs = gpuRIR.simulateRIR(self.room_sz, self.beta, self.traj_pts[:,:,source_idx], self.mic_pos,
 						nb_img, Tmax, self.fs, Tdiff=Tdiff, orV_rcv=self.array_setup.mic_orV, 
 						mic_pattern=self.array_setup.mic_pattern)
@@ -182,7 +181,6 @@ class AcousticScene:
 		noise_signal = np.sqrt(ac_pow/10**(self.SNR/10)) / np.sqrt(ac_pow_noise) * self.noise_signal
 		mic_signals += noise_signal[0:len(self.t), :]
 
-		# Apply the propagation delay to the VAD information if it exists
 		if hasattr(self, 'source_vad'):
 			self.mic_vad_sources = [] # for vad of separate sensor signals of source
 			for source_idx in range(num_source):
@@ -193,21 +191,294 @@ class AcousticScene:
 			self.mic_vad_sources = np.array(self.mic_vad_sources).transpose(1,0) # (nsample, nsources)
 			self.mic_vad = np.sum(self.mic_vad_sources, axis=1)>0.5 # for vad of mixed sensor signals of sources (nsample)
 
-		# Check whether the values of microphone signals is in the range of [-1, 1] for wav saving with soundfile.write
-		# max_value = np.max(mic_signals)
-		# min_value = np.min(mic_signals)
-		# max_value_dp = np.max(dp_mic_signals)
-		# min_value_dp = np.min(dp_mic_signals)
-		# value = np.max([np.abs(max_value), np.abs(min_value), np.abs(max_value_dp), np.abs(min_value_dp)])
-		# if (value>1):
-		# 	print('Value of microphone signals: [{:.4f}, {:.4f}, {:.4f}, {:.4f}]'.format(min_value, max_value, min_value_dp, max_value_dp))
-		# 	mic_signals = mic_signals/value
-		# 	dp_mic_signals = dp_mic_signals/value
-		# 	mic_signals_sources = mic_signals_sources/value
-		# 	dp_mic_signals_sources = dp_mic_signals_sources/value
-		# 	# raise Exception("Value of microphone signals is out of range [-1, 1]")
-
 		return mic_signals
+
+class LibriSpeechDataset(Dataset):
+	""" Dataset with random LibriSpeech utterances.
+	You need to indicate the path to the root of the LibriSpeech dataset in your file system
+	and the length of the utterances in seconds.
+	The dataset length is equal to the number of chapters in LibriSpeech (585 for train-clean-100 subset)
+	but each time you ask for dataset[idx] you get a random segment from that chapter.
+	It uses webrtcvad to clean the silences from the LibriSpeech utterances.
+	"""
+
+	def _exploreCorpus(self, path, file_extension):
+		directory_tree = {}
+		for item in os.listdir(path):
+			if os.path.isdir( os.path.join(path, item) ):
+				directory_tree[item] = self._exploreCorpus( os.path.join(path, item), file_extension )
+			elif item.split(".")[-1] == file_extension:
+				directory_tree[ item.split(".")[0] ] = os.path.join(path, item)
+		return directory_tree
+
+	def _cleanSilences(self, s, aggressiveness, return_vad=False):
+		self.vad.set_mode(aggressiveness)
+
+		vad_out = np.zeros_like(s)
+		vad_frame_len = int(10e-3 * self.fs)  # 0.001s,16samples gives one same vad results
+		n_vad_frames = len(s) // vad_frame_len # 1000/s,1/0.001s
+		for frame_idx in range(n_vad_frames):
+			frame = s[frame_idx * vad_frame_len: (frame_idx + 1) * vad_frame_len]
+			frame_bytes = (frame * 32767).astype('int16').tobytes()
+			vad_out[frame_idx*vad_frame_len: (frame_idx+1)*vad_frame_len] = self.vad.is_speech(frame_bytes, self.fs)
+		s_clean = s * vad_out
+
+		return (s_clean, vad_out) if return_vad else s_clean
+
+	def __init__(self, path, T, fs, num_source, size=None, return_vad=False, readers_range=None, clean_silence=True):
+		self.corpus = self._exploreCorpus(path, 'flac')
+		if readers_range is not None:
+			for key in list(map(int, self.nChapters.keys())):
+				if int(key) < readers_range[0] or int(key) > readers_range[1]:
+					del self.corpus[key]
+
+		self.nReaders = len(self.corpus)
+		self.nChapters = {reader: len(self.corpus[reader]) for reader in self.corpus.keys()}
+		self.nUtterances = {reader: {
+				chapter: len(self.corpus[reader][chapter]) for chapter in self.corpus[reader].keys()
+			} for reader in self.corpus.keys()}
+
+		self.chapterList = []
+		for chapters in list(self.corpus.values()):
+			self.chapterList += list(chapters.values())
+
+		# self.readerList = []
+		# for reader in self.corpus.keys():
+		# 	self.readerList += list(reader)
+
+		self.fs = fs
+		self.T = T
+		self.num_source = num_source
+
+		self.clean_silence = clean_silence
+		self.return_vad = return_vad
+		self.vad = webrtcvad.Vad()
+
+		self.sz = len(self.chapterList) if size is None else size
+
+	def __len__(self):
+		return self.sz
+
+	def __getitem__(self, idx):
+		if idx < 0: idx = len(self) + idx
+		while idx >= len(self.chapterList): idx -= len(self.chapterList)
+
+		s_sources = []
+		s_clean_sources = []
+		vad_out_sources = []
+		speakerID_list = []
+
+		for source_idx in range(self.num_source):
+			if source_idx==0:
+				chapter = self.chapterList[idx]
+				utts = list(chapter.keys())
+				spakerID = utts[0].split('-')[0]
+
+			else:
+				idx_othersources = np.random.randint(0, len(self.chapterList))
+				chapter = self.chapterList[idx_othersources]
+				utts = list(chapter.keys())
+				spakerID = utts[0].split('-')[0]
+				while spakerID in speakerID_list:
+					idx_othersources = np.random.randint(0, len(self.chapterList))
+					chapter = self.chapterList[idx_othersources]
+					utts = list(chapter.keys())
+					spakerID = utts[0].split('-')[0]
+
+			speakerID_list += [spakerID]
+
+			# Get a random speech segment from the selected chapter
+			s = np.array([])
+			utt_paths = list(chapter.values())
+
+			n = np.random.randint(0, len(chapter))
+
+			while s.shape[0] < self.T * self.fs:
+				utterance, fs = soundfile.read(utt_paths[n])
+				assert fs == self.fs
+				s = np.concatenate([s, utterance])
+				n += 1
+				if n >= len(chapter): n=0
+			s = s[0: int(self.T * fs)]
+			s -= s.mean()
+
+			# Clean silences, it starts with the highest aggressiveness of webrtcvad,
+			# but it reduces it if it removes more than the 66% of the samples
+			s_clean, vad_out = self._cleanSilences(s, 3, return_vad=True)
+			if np.count_nonzero(s_clean) < len(s_clean) * 0.66:
+				s_clean, vad_out = self._cleanSilences(s, 2, return_vad=True)
+			if np.count_nonzero(s_clean) < len(s_clean) * 0.66:
+				s_clean, vad_out = self._cleanSilences(s, 1, return_vad=True)
+
+			s_sources += [s]
+			s_clean_sources += [s_clean]
+			vad_out_sources += [vad_out]
+
+		s_sources = np.array(s_sources).transpose(1,0)
+		s_clean_sources = np.array(s_clean_sources).transpose(1,0)
+		vad_out_sources = np.array(vad_out_sources).transpose(1,0)
+
+		if self.clean_silence:
+			return (s_clean_sources, vad_out_sources) if self.return_vad else s_clean_sources
+		else:
+			return (s_sources, vad_out_sources) if self.return_vad else s_sources
+
+
+
+
+
+class NoiseDataset():
+	def __init__(self, T, fs, nmic, noise_type, noise_path=None, c=343.0):
+		self.T = T
+		self.fs= fs
+		self.nmic = nmic
+		self.noise_type = noise_type # ? 'diffuse' and 'real_world' cannot exist at the same time
+		# self.mic_pos = mic_pos # valid for 'diffuse' 
+		self.noie_path = noise_path # valid for 'diffuse' and 'real-world'
+		if noise_path != None:
+			_, self.path_set = self._exploreCorpus(noise_path, 'wav')
+		self.c = c
+
+	def get_random_noise(self, mic_pos=None):
+		noise_type = self.noise_type.getValue()
+
+		if noise_type == 'spatial_white':
+			noise_signal = self.gen_Gaussian_noise(self.T, self.fs, self.nmic)
+
+		elif noise_type == 'diffuse':
+			idx = random.randint(0, len(self.path_set)-1)
+			noise, fs = soundfile.read(self.path_set[idx])
+			if fs != self.fs:
+				#noise = librosa.resample(noise, orig_sr = fs, target_sr = self.fs)
+				noise= scipy.signal.resample_poly(noise, up=self.fs, down=fs)
+
+			nsample_desired = int(self.T * self.fs * self.nmic)
+			noise_copy = copy.deepcopy(noise)
+			nsample = noise.shape[0]
+			while nsample < nsample_desired:
+				noise_copy = np.concatenate((noise_copy, noise), axis=0)
+				nsample = noise_copy.shape[0]
+
+			st = random.randint(0, nsample - nsample_desired)
+			ed = st + nsample_desired
+			noise_copy = noise_copy[st:ed]
+
+			noise_signal = self.gen_diffuse_noise(noise_copy, self.T, self.fs, mic_pos, c=self.c)
+		elif noise_type == 'real_world': # the array topology should be consistent
+			idx = random.randint(0, len(self.path_set)-1)
+			noise, fs = soundfile.read(self.path_set[idx])
+			nmic = noise.shape[-1]
+			if nmic != self.nmic:
+				raise Exception('Unexpected number of microphone channels')
+			if fs != self.fs:
+				#noise = librosa.resample(noise.transpose(1,0), orig_sr = fs, target_sr = self.fs).transpose(1,0)
+				noise = scipy.signal.resample_poly(noise, up=self.fs, down=fs)
+			nsample_desired = int(self.T * self.fs)
+			noise_copy = copy.deepcopy(noise)
+			nsample = noise.shape[0]
+			while nsample < nsample_desired:
+				noise_copy = np.concatenate((noise_copy, noise), axis=0)
+				nsample = noise_copy.shape[0]
+
+			st = random.randint(0, nsample - nsample_desired)
+			ed = st + nsample_desired
+			noise_signal = noise_copy[st:ed, :]
+
+		else:
+			raise Exception('Unknown noise type specified')
+		
+		# save_file = 'test1.wav'
+		# if save_file != None:
+		# 	soundfile.write(save_file, noise_signal, self.fs)
+
+		return noise_signal
+
+	def _exploreCorpus(self, path, file_extension):
+		directory_tree = {}
+		directory_path = []
+		for item in os.listdir(path):
+			if os.path.isdir( os.path.join(path, item) ):
+				directory_tree[item], directory_path = self._exploreCorpus( os.path.join(path, item), file_extension )
+			elif item.split(".")[-1] == file_extension:
+				directory_tree[ item.split(".")[0] ] = os.path.join(path, item)
+				directory_path += [os.path.join(path, item)]
+		return directory_tree, directory_path
+
+	def gen_Gaussian_noise(self, T, fs, nmic):
+
+		noise = np.random.standard_normal((int(T*fs), nmic))
+
+		return noise
+
+	def gen_diffuse_noise(self, noise, T, fs, mic_pos, nfft=256, c=343.0, type_nf='spherical'):
+		""" Reference:  E. A. P. Habets, “Arbitrary noise field generator.” https://github.com/ehabets/ANF-Generator
+		"""
+		M = mic_pos.shape[0]
+		L = int(T*fs)
+		
+		# Generate M mutually 'independent' input signals
+		noise = noise - np.mean(noise)
+		noise_M = np.zeros([L, M])  
+		for m in range(0,M):
+			noise_M[:, m] = noise[m*L:(m+1)*L]
+
+		# Generate matrix with desired spatial coherence
+		ww = 2*math.pi*self.fs*np.array([i for i in range(nfft//2+1)])/nfft
+		DC = np.zeros([M, M, nfft//2+1])
+		for p in range(0,M):
+			for q in range(0,M):
+				if p == q:
+					DC[p,q,:] = np.ones([1,1,nfft//2+1])
+				else:
+					dist = np.linalg.norm(mic_pos[p,:]-mic_pos[q,:])
+					if type_nf == 'spherical':
+						DC[p,q,:] = np.sinc(ww*dist/(c*math.pi))
+					elif type_nf == 'cylindrical':
+						DC[p,q,:] = scipy.special(0,ww*dist/c)
+					else:
+						raise Exception('Unknown noise field')
+
+		# Generate sensor signals with desired spatial coherence
+		noise_signal = self.mix_signals(noise_M, DC)
+
+		return noise_signal
+
+	def mix_signals(self, noise, DC, method='cholesky'):
+		""" Reference:  E. A. P. Habets, “Arbitrary noise field generator.” https://github.com/ehabets/ANF-Generator
+		"""
+		M = noise.shape[1] # Number of sensors
+		K = (DC.shape[2]-1)*2 # Number of frequency bins
+
+		# Compute short-time Fourier transform (STFT) of all input signals
+		noise = np.vstack([np.zeros([K//2,M]), noise, np.zeros([K//2,M])])
+		noise = noise.transpose()
+		f, t, N = scipy.signal.stft(noise,window='hann', nperseg=K, noverlap=0.75*K, nfft=K)
+
+		# Generate output in the STFT domain for each frequency bin k
+		X = np.zeros(N.shape,dtype=complex)
+		for k in range(1,K//2+1):
+			if method == 'cholesky':
+				C = scipy.linalg.cholesky(DC[:,:,k])
+			elif method == 'eigen': # Generated cohernce and noise signal are slightly different from MATLAB version
+				D, V = np.linalg.eig(DC[:,:,k])
+				ind = np.argsort(D)
+				D = D[ind]
+				D = np.diag(D)
+				V = V[:, ind]
+				C = np.matmul(np.sqrt(D), V.T)
+			else:
+				raise Exception('Unknown method specified')
+
+			X[:,k,:] = np.dot(np.squeeze(N[:,k,:]).transpose(),np.conj(C)).transpose()
+
+		# Compute inverse STFT
+		F, x = scipy.signal.istft(X,window='hann',nperseg=K,noverlap=0.75*K, nfft=K)
+		x = x.transpose()[K//2:-K//2,:]
+
+		return x
+
+
+
 
 ## %% Trajectory Datasets
 class FixTrajectoryDataset(Dataset):
@@ -261,17 +532,9 @@ class FixTrajectoryDataset(Dataset):
 		if self.return_acoustic_scene:
 			return mic_signals, acoustic_scene
 		else: 
-			# mic_signals = mic_signals.astype(np.float32)
-			# gts = []
-			# gts += [acoustic_scene.DOAw.astype(np.float32)]
-			# gts += [acoustic_scene.mic_vad_sources]
-			# gts += [acoustic_scene.mic_vad]
 			gts = {}
 			gts['doa'] = acoustic_scene.DOAw.astype(np.float32)
 			gts['vad_sources'] = acoustic_scene.mic_vad_sources
-
-			# gts['vad'] = acoustic_scene.mic_vad
-
 			return mic_signals, gts
 
 
@@ -301,14 +564,8 @@ class LocataDataset(Dataset):
 
 		self.vad = webrtcvad.Vad()
 		self.vad.set_mode(1)
-
-		if array == 'dummy':
-			self.array_setup = dummy_array_setup
-		elif array == 'eigenmike':
-			self.array_setup = eigenmike_array_setup
-		elif array == 'benchmark2':
-			self.array_setup = benchmark2_array_setup
-		elif array == 'dicit':
+		
+		if array == 'dicit':
 			self.array_setup = dicit_array_setup
 
 		self.directories = []
@@ -520,16 +777,6 @@ class Segmenting_SRPDNN(object):
 		elif self.step > L:
 			raise Exception('The window step can not be larger than the signal length ({})'.format(L))
 
-		# Pad and window the signal
-		# x = np.append(x, np.zeros((N_w * self.step + self.K - L, N_mics)), axis=0)
-
-		# shape_Xw = (N_w, self.K, N_mics)
-		# strides_Xw = [self.step * N_mics, N_mics, 1]
-		# strides_Xw = [strides_Xw[i] * x.itemsize for i in range(3)]
-		# Xw = np.lib.stride_tricks.as_strided(x, shape=shape_Xw, strides=strides_Xw)
-		# Xw = Xw.transpose((0, 2, 1)) * self.w
-
-		# Pad and window the DOA # (nsample,naziele,nsource)
 		DOA = []
 		for source_idx in range(num_source):
 			DOA += [np.append(acoustic_scene.DOA[:,:,source_idx], np.tile(acoustic_scene.DOA[-1,:,source_idx].reshape((1,2)),
@@ -582,159 +829,155 @@ class Segmenting_SRPDNN(object):
 
 		return x, acoustic_scene
 
-class Segmenting(object):
-	""" Segmenting transform.
+class RandomTrajectoryDataset(Dataset):
+	""" Dataset Acoustic Scenes with random trajectories.
+	The length of the dataset is the length of the source signals dataset.
 	"""
-	def __init__(self, K, step, window=None):
-		self.K = K
-		self.step = step
-		if window is None:
-			self.w = np.ones(K)
-		elif callable(window):
-			try: self.w = window(K)
-			except: raise Exception('window must be a NumPy window function or a Numpy vector with length K')
-		elif len(window) == K:
-			self.w = window
-		else:
-			raise Exception('window must be a NumPy window function or a Numpy vector with length K')
+	def __init__(self, sourceDataset, num_source, source_state, room_sz, T60, abs_weights, array_setup, array_pos, noiseDataset, SNR, nb_points, min_dis, c=343.0, transforms=None):
+		"""
+		sourceDataset: dataset with the source signals (such as LibriSpeechDataset)
+		num_source: Number of sources
+		source_state: Static or mobile sources
+		room_sz: Size of the rooms in meters
+		T60: Reverberation time of the room in seconds
+		abs_weights: Absorption coefficients rations of the walls
+		array_setup: Named tuple with the characteristics of the array
+		array_pos: Position of the center of the array as a fraction of the room size
+		noiseDataset: dataset with the noise signals
+		SNR: Signal to (omnidirectional) Noise Ration
+		nb_points: Number of points to simulate along the trajectory
+		c: Speecd of sound 
+		transforms: Transform to perform to the simulated microphone signals and the Acoustic Scene
 
-	def __call__(self, x, acoustic_scene):
-		N_mics = x.shape[1]
-		N_dims = acoustic_scene.DOA.shape[1]
-		num_source = acoustic_scene.DOA.shape[2]
-		L = x.shape[0]
-		N_w = np.floor(L/self.step - self.K/self.step + 1).astype(int)
+		Any parameter (except from nb_points and transforms) can be Parameter object to make it random.
+		"""
+		self.sourceDataset = sourceDataset
+		self.source_state = source_state
+		self.num_source = num_source if type(num_source) is Parameter else Parameter(num_source)
 
-		if self.K > L:
-			raise Exception('The window size can not be larger than the signal length ({})'.format(L))
-		elif self.step > L:
-			raise Exception('The window step can not be larger than the signal length ({})'.format(L))
+		self.room_sz = room_sz if type(room_sz) is Parameter else Parameter(room_sz)
+		self.T60 = T60 if type(T60) is Parameter else Parameter(T60)
+		self.abs_weights = abs_weights if type(abs_weights) is Parameter else Parameter(abs_weights)
 
-		# Pad and window the signal
-		x = np.append(x, np.zeros((N_w * self.step + self.K - L, N_mics)), axis=0)
+		assert np.count_nonzero(array_setup.orV) == 1, "array_setup.orV mus be parallel to an axis"
+		self.array_setup = array_setup
+		self.N = array_setup.mic_pos.shape[0]
+		self.array_pos = array_pos if type(array_pos) is Parameter else Parameter(array_pos)
+		self.mic_scale = array_setup.mic_scale if type(array_setup.mic_scale) is Parameter else Parameter(array_setup.mic_scale)
+		self.min_dis = min_dis if type(min_dis) is Parameter else Parameter(min_dis)
+		self.noiseDataset = noiseDataset
+		self.SNR = SNR if type(SNR) is Parameter else Parameter(SNR)
+		self.nb_points = nb_points
+		self.fs = sourceDataset.fs
+		self.c = c
 
-		shape_Xw = (N_w, self.K, N_mics)
-		strides_Xw = [self.step * N_mics, N_mics, 1]
-		strides_Xw = [strides_Xw[i] * x.itemsize for i in range(3)]
-		Xw = np.lib.stride_tricks.as_strided(x, shape=shape_Xw, strides=strides_Xw)
-		Xw = Xw.transpose((0, 2, 1)) * self.w
+		self.transforms = transforms
 
-		# Pad and window the DOA
-		DOA = []
+	def __len__(self):
+		return len(self.sourceDataset)
+
+	def __getitem__(self, idx):
+		if idx < 0: idx = len(self) + idx
+
+		acoustic_scene = self.getRandomScene(idx)
+		mic_signals = acoustic_scene.simulate()
+		if self.transforms is not None:
+			for t in self.transforms:
+				mic_signals, acoustic_scene = t(mic_signals, acoustic_scene)
+
+		return mic_signals, acoustic_scene
+
+	def get_batch(self, idx1, idx2):
+		mic_sig_batch = []
+		acoustic_scene_batch = []
+		for idx in range(idx1, idx2):
+			mic_sig, acoustic_scene = self[idx]
+			mic_sig_batch.append(mic_sig)
+			acoustic_scene_batch.append(acoustic_scene)
+
+		return np.stack(mic_sig_batch), np.stack(acoustic_scene_batch)
+
+	def getRandomScene(self, idx):
+		# Sources
+		source_signal, vad = self.sourceDataset[idx]
+		num_source = self.num_source.getValue()
+
+		# Room
+		room_sz = self.room_sz.getValue()
+		T60 = self.T60.getValue()
+		abs_weights = self.abs_weights.getValue()
+		beta = gpuRIR.beta_SabineEstimation(room_sz, T60, abs_weights)
+
+		# Microphones
+		array_pos = self.array_pos.getValue() * room_sz
+		mic_scale = self.mic_scale.getValue()
+		mic_pos = array_pos + self.array_setup.mic_pos * mic_scale
+		# Noises
+		noise_signal = self.noiseDataset.get_random_noise(self.array_setup.mic_pos*mic_scale)
+
+		# Trajectory points
+		src_pos_min = np.array([0.0, 0.0, 0.0])
+		src_pos_max = room_sz
+		if self.array_setup.arrayType == 'planar':
+			if np.sum(self.array_setup.orV) > 0:
+				src_pos_min[np.nonzero(self.array_setup.orV)] = array_pos[np.nonzero(self.array_setup.orV)]
+			else:
+				src_pos_max[np.nonzero(self.array_setup.orV)] = array_pos[np.nonzero(self.array_setup.orV)]
+
+		src_pos_min[np.nonzero(self.array_setup.orV)] += self.min_dis.getValue()
+		timestamps = np.arange(self.nb_points) * len(source_signal) / self.fs / self.nb_points
+		t = np.arange(len(source_signal)) / self.fs
+		traj_pts = np.zeros((self.nb_points, 3, num_source))
+		trajectory = np.zeros((len(t), 3, num_source))
+		DOA = np.zeros((len(t), 2, num_source))
 		for source_idx in range(num_source):
-			DOA += [np.append(acoustic_scene.DOA[:,:,source_idx], np.tile(acoustic_scene.DOA[-1,:,source_idx].reshape((1,2)),
-				[N_w*self.step+self.K-L, 1]), axis=0)] # Replicate the last known DOA
-		DOA = np.array(DOA).transpose(1,2,0)
-		# L = x.shape[0]
+			if self.source_state == 'static':
+				src_pos = src_pos_min + np.random.random(3) * (src_pos_max - src_pos_min)
+				traj_pts[:, :, source_idx] = np.ones((self.nb_points, 1)) * src_pos
 
-		shape_DOAw = (N_w, self.K, N_dims)
-		strides_DOAw = [self.step * N_dims, N_dims, 1]
-		strides_DOAw = [strides_DOAw[i] * DOA.itemsize for i in range(3)]
+			elif self.source_state == 'mobile':
+				src_pos_ini = src_pos_min + np.random.random(3) * (src_pos_max - src_pos_min)
+				src_pos_end = src_pos_min + np.random.random(3) * (src_pos_max - src_pos_min)
 
-		acoustic_scene.DOAw = []
-		for source_idx in range(num_source):
-			DOAw = np.lib.stride_tricks.as_strided(DOA[:,:,source_idx], shape=shape_DOAw, strides=strides_DOAw)
-			DOAw = np.ascontiguousarray(DOAw)
-			for i in np.flatnonzero(np.abs(np.diff(DOAw[..., 1], axis=1)).max(axis=1) > np.pi):
-				DOAw[i, DOAw[i,:,1]<0, 1] += 2*np.pi # Avoid jumping from -pi to pi in a window
-			DOAw = np.mean(DOAw, axis=1)
-			DOAw[DOAw[:,1]>np.pi, 1] -= 2*np.pi
-			acoustic_scene.DOAw += [DOAw]
-		acoustic_scene.DOAw = np.array(acoustic_scene.DOAw).transpose(1, 2, 0)
+				Amax = np.min(np.stack((src_pos_ini - src_pos_min,
+											  src_pos_max - src_pos_ini,
+											  src_pos_end - src_pos_min,
+											  src_pos_max - src_pos_end)),
+										axis=0)
 
-		# Pad and window the VAD if it exists
-		if hasattr(acoustic_scene, 'mic_vad'): 
-			vad = acoustic_scene.mic_vad[:, np.newaxis]
-			vad = np.append(vad, np.zeros((L - vad.shape[0], 1)), axis=0)
+				A = np.random.random(3) * np.minimum(Amax, 1) 			# Oscilations with 1m as maximum in each axis
+				w = 2*np.pi / self.nb_points * np.random.random(3) * 2  # Between 0 and 2 oscilations in each axis
 
-			shape_vadw = (N_w, self.K, 1)
-			strides_vadw = [self.step * 1, 1, 1]
-			strides_vadw = [strides_vadw[i] * vad.itemsize for i in range(3)]
+				traj_pts[:,:,source_idx] = np.array([np.linspace(i,j,self.nb_points) for i,j in zip(src_pos_ini, src_pos_end)]).transpose()
+				traj_pts[:,:,source_idx] += A * np.sin(w * np.arange(self.nb_points)[:, np.newaxis])
 
-			acoustic_scene.mic_vad = np.lib.stride_tricks.as_strided(vad, shape=shape_vadw, strides=strides_vadw)[..., 0]
+				if np.random.random(1) < 0.25:
+					traj_pts[:,:,source_idx] = np.ones((self.nb_points,1)) * src_pos_ini
+			#set the ele = pi/2
+			traj_pts[:,2,:] = mic_pos[0,2]
+			# Interpolate trajectory points
+			trajectory[:,:,source_idx]  = np.array([np.interp(t, timestamps, traj_pts[:,i,source_idx]) for i in range(3)]).transpose()
 
-		# Pad and window the VAD if it exists
-		if hasattr(acoustic_scene, 'mic_vad_sources'): 
-			shape_vadw = (N_w, self.K, 1)
-			strides_vadw = [self.step * 1, 1, 1]
-			strides_vadw = [strides_vadw[i] * vad.itemsize for i in range(3)]
-			num_source = acoustic_scene.mic_vad_sources.shape[1]
-			vad_sources = []
-			for source_idx in range(num_source):
-				vad = acoustic_scene.mic_vad_sources[:, source_idx:source_idx + 1]
-				vad = np.append(vad, np.zeros((L - vad.shape[0], 1)), axis=0)
+			DOA[:,:,source_idx] = cart2sph(trajectory[:,:,source_idx] - array_pos)[:, 1:3]
+		acoustic_scene = AcousticScene(
+			room_sz = room_sz,
+			T60 = T60,
+			beta = beta,
+			noise_signal = noise_signal,
+			SNR = self.SNR.getValue(),
+			array_setup = self.array_setup,
+			mic_pos = mic_pos,
+			source_signal = source_signal[:,0:num_source],
+			fs = self.fs,
+			traj_pts = traj_pts,
+			timestamps = timestamps,
+			trajectory = trajectory,
+			t = t,
+			DOA = DOA,
+			c = self.c 
+		)
+		acoustic_scene.source_vad = vad[:,0:num_source] # a mask
 
-				vad_sources += [np.lib.stride_tricks.as_strided(vad, shape=shape_vadw, strides=strides_vadw)[..., 0]]
-
-			acoustic_scene.mic_vad_sources = np.array(vad_sources).transpose(1, 2, 0)  # (nt,,nsource)
-
-		# Timestamp for each window
-		acoustic_scene.tw = np.arange(0, (L-self.K), self.step) / acoustic_scene.fs
-
-		return Xw, acoustic_scene
+		return acoustic_scene
 
 
-class Extract_DOAw(object):
-	""" Replace the AcousticScene object by just its windowed DOA
-	"""
-	def __call__(self, x, acoustic_scene):
-		return x, acoustic_scene.DOAw
-
-
-class ToFloat32(object):
-	""" Convert to np.float32
-	"""
-	def __call__(self, x, DOAw):
-		return x.astype(np.float32), DOAw.astype(np.float32)
-
-
-# %% Representation functions
-
-def plot_srp_map(theta, phi, srp_map, DOA=None, DOA_est=None, DOA_srpMax=None):
-	theta = theta * 180/np.pi
-	phi = phi * 180/np.pi
-	theta_step = theta[1] - theta[0]
-	phi_step = phi[1] - phi[0]
-	plt.imshow(srp_map, cmap='inferno', extent=(phi[0]-phi_step/2, phi[-1]+phi_step/2, theta[-1]+theta_step/2, theta[0]-theta_step/2))
-	plt.xlabel('Azimuth [º]')
-	plt.ylabel('Elevation [º]')
-
-	if DOA is not None:
-		if DOA.ndim == 1: plt.scatter(DOA[1]*180/np.pi, DOA[0]*180/np.pi, c='r')
-		elif DOA.ndim == 2:
-			DOA_s = np.split(DOA, (np.abs(np.diff(DOA[:, 1])) > np.pi).nonzero()[0] + 1) # Split when jumping from -pi to pi
-			[plt.plot(DOA_s[i][:, 1]*180/np.pi, DOA_s[i][:, 0]*180/np.pi, 'r') for i in range(len(DOA_s))]
-			plt.scatter(DOA[-1,1]*180/np.pi, DOA[-1,0]*180 / np.pi, c='r')
-	if DOA_srpMax is not None:
-		if DOA_srpMax.ndim == 1: plt.scatter(DOA_srpMax[1] *180/np.pi, DOA_srpMax[0]*180/np.pi, c='k')
-		elif DOA_srpMax.ndim == 2:
-			DOA_srpMax_s = np.split(DOA_srpMax, (np.abs(np.diff(DOA_srpMax[:, 1])) > np.pi).nonzero()[0] + 1) # Split when jumping from -pi to pi
-			[plt.plot(DOA_srpMax_s[i][:, 1]*180 / np.pi, DOA_srpMax_s[i][:, 0]*180 / np.pi, 'k') for i in range(len(DOA_srpMax_s))]
-			plt.scatter(DOA_srpMax[-1,1]*180 / np.pi, DOA_srpMax[-1,0]*180 / np.pi, c='k')
-	if DOA_est is not None:
-		if DOA_est.ndim == 1: plt.scatter(DOA_est[1]*180/np.pi, DOA_est[0]*180/np.pi, c='b')
-		elif DOA_est.ndim == 2:
-			DOA_est_s = np.split(DOA_est, (np.abs(np.diff(DOA_est[:, 1])) > np.pi).nonzero()[0] + 1) # Split when jumping from -pi to pi
-			[plt.plot(DOA_est_s[i][:, 1]*180 / np.pi, DOA_est_s[i][:, 0]*180 / np.pi, 'b') for i in range(len(DOA_est_s))]
-			plt.scatter(DOA_est[-1,1]*180 / np.pi, DOA_est[-1,0]*180 / np.pi, c='b')
-
-	plt.xlim(phi.min(), phi.max())
-	plt.ylim(theta.max(), theta.min())
-	plt.show()
-
-
-def animate_trajectory(theta, phi, srp_maps, fps, DOA=None, DOA_est=None, DOA_srpMax=None, file_name=None):
-	fig = plt.figure()
-
-	def animation_function(frame, theta, phi, srp_maps, DOA=None, DOA_est=None, DOA_srpMax=None):
-		plt.clf()
-		srp_map = srp_maps[frame,:,:]
-		if DOA is not None: DOA = DOA[:frame+1,:]
-		if DOA_est is not None: DOA_est = DOA_est[:frame+1,:]
-		if DOA_srpMax is not None: DOA_srpMax = DOA_srpMax[:frame+1,:]
-		plot_srp_map(theta, phi, srp_map, DOA, DOA_est, DOA_srpMax)
-
-	anim = animation.FuncAnimation(fig, animation_function, frames=srp_maps.shape[0], fargs=(theta, phi, srp_maps, DOA, DOA_est, DOA_srpMax), interval=1e3/fps, repeat=False)
-	plt.show()
-	plt.close(fig)
-	if file_name is not None: anim.save(file_name, fps=fps, extra_args=['-vcodec', 'libx264'])
