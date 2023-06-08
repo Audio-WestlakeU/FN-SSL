@@ -51,7 +51,7 @@ A python implementation of "FN-SSL: Full-Band and Narrow-Band Fusion for Sound S
     * For test,
 
     ```
-    python boring.py fit  --ckpt_path logs/MyModel/version_x/checkpoints/**.ckpt --trainer.devices=*,*
+    python main.py fit  --ckpt_path logs/MyModel/version_x/checkpoints/**.ckpt --trainer.devices=*,*
     ```
 
 + **Pretrained models**
