@@ -20,7 +20,7 @@ A python implementation of "FN-SSL: Full-Band and Narrow-Band Fusion for Sound S
     ```
     python Simu.py --train/--test/--dev
     ```
-    * For DP-IPD regression, set **is_doa = False** (Model.FN_SSL), and use mse loss function, for DOA classification, set **is_doa = True** (Model.FN_SSL), and use ce loss function, meanwhile, the predgt2doa needs to be replaced synchronously.
+    * For DP-IPD regression, set **is_doa = False** (Model.FN_SSL), and use mse loss function, for DOA classification, set **is_doa = True** (Model.FN_SSL), and use ce loss function,  meanwhile, the predgt2doa needs to be replaced synchronously. The initial Learning rate of doa classification is set to 5e-4.
     ```
     net = at_model.FN_SSL(is_doa=True/False)
     ```
