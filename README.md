@@ -18,12 +18,12 @@ Generate multi-channel data, You can set **data_num (in Simu.py)** to control th
 ```
 python Simu.py --train/--test/--dev
 ```
-
+for DP-IPD regression, set **is_doa = False** (Model.FN_SSL), and use mse loss function, for DOA classification, set **is_doa = True** (Model.FN_SSL), and use ce loss function, meanwhile, the pred2doa needs to be replaced synchronously.
 + **Training**
 ```
 python Train.py --train --gpu-id [*] --bz * * * 
 ```
-for DP-IPD regression, set **is_doa = False** (Model.FN_SSL), and use mse loss function, for DOA classification, set **is_doa = True** (Model.FN_SSL), and use ce loss function, meanwhile, the pred2doa needs to be replaced synchronously.
+
 + **Evaluation** 
   
 For simulated data evaluation
