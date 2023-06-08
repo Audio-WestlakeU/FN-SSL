@@ -53,7 +53,7 @@ class FNblock(nn.Module):
 class FN_SSL(nn.Module):
     """ 
     """
-    def __init__(self,input_size=4,hidden_size=256,is_online=True,is_doa=True):
+    def __init__(self,input_size=4,hidden_size=256,is_online=True,is_doa=False):
         """the block of full-band and narrow-band fusion
         """
         super(FN_SSL, self).__init__()
