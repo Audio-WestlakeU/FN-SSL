@@ -43,6 +43,16 @@ A python implementation of "FN-SSL: Full-Band and Narrow-Band Fusion for Sound S
 + **Pytorch Lightning version**
 
     * We have re implemented FN-SSL using the Pytorch-lightning framework, which has a improvement in training speed compared to the torch.
+    * For Train,
+
+    ```
+    python main.py fit --data.batch_size=[*,*] --trainer.devices=*,*
+    ```
+    * For test,
+
+    ```
+    python boring.py fit  --ckpt_path logs/MyModel/version_x/checkpoints/**.ckpt --trainer.devices=*,*
+    ```
 
 + **Pretrained models**
 
