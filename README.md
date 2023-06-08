@@ -46,7 +46,7 @@ Using the FN_lightning model to load the lightning checkpoint in torch framework
 | Framework | target | checkpoint |
 | --- | --- | --- |
 | Lightning | DP-IPD | https://pan.baidu.com/s/1zRKpiqbSuo80Xu5ZRoS1gQ?pwd=6w51 |
-| Lightning | DOA | https://pan.baidu.com/s/1zRKpiqbSuo80Xu5ZRoS1gQ?pwd=6w51 |
+| Lightning | DOA | https://pan.baidu.com/s/1U1Wl5ZBZBItc2Vku7AyqNA?pwd=ceqm |
 
 more checkpoints will be update soon.
 
