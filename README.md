@@ -4,8 +4,8 @@ A python implementation of "FN-SSL: Full-Band and Narrow-Band Fusion for Sound S
 + **Contributions** 
   - Full-Band and Narrow-Band Fusion for moving sound source localization,
 + **Extension to microphone array with the number of microphones larger than two**: 
-  - for DP-IPD regression:
-  - for DOA classification:
+  - for DP-IPD regression: set **is_doa = False** (Model.FN_SSL), and use mse loss. 
+  - for DOA classification: set **is_doa = True** (Model.FN_SSL), and use ce loss.
 
 ## Datasets
 + **Source signals**: from <a href="http://www.openslr.org/12/" target="_blank">LibriSpeech database</a> 
@@ -42,9 +42,10 @@ We have re implemented FN-SSL using the Pytorch-lightning framework, which has a
 + **Pretrained models**
 
 Using the FN_lightning model to load the lightning checkpoint in torch framework.
-|Framework | target | checkpoint |
+| Framework | target | checkpoint |
 | --- | --- | --- |
 | Lightning | DP-IPD | https://pan.baidu.com/s/1zRKpiqbSuo80Xu5ZRoS1gQ?pwd=6w51 |
+| Lightning | DOA | https://pan.baidu.com/s/1zRKpiqbSuo80Xu5ZRoS1gQ?pwd=6w51 |
 
 more checkpoints will be update soon.
 
