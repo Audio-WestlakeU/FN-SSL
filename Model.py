@@ -53,11 +53,12 @@ class FNblock(nn.Module):
 class FN_SSL(nn.Module):
     """ 
     """
-    def __init__(self,input_size=4,hidden_size=256,is_online=True):
+    def __init__(self,input_size=4,hidden_size=256,is_online=True,is_doa=True):
         """the block of full-band and narrow-band fusion
         """
         super(FN_SSL, self).__init__()
         self.is_online = is_online
+	self.is_doa = is_doa
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.block_1 = FNblock(input_size=self.input_size,is_online=self.is_online, is_first=True)
@@ -66,6 +67,8 @@ class FN_SSL(nn.Module):
         self.emb2ipd = nn.Linear(256,2)
         self.pooling = nn.AvgPool2d(kernel_size=(12, 1))
         self.tanh = nn.Tanh()
+        if self.is_doa:
+            self.ipd2doa = nn.Linear(512,180)
     def forward(self,x):
         x = x.permute(0,3,2,1)
         nb,nt,nf,nc = x.shape       
@@ -81,8 +84,10 @@ class FN_SSL(nn.Module):
         ipd = ipd.permute(0,2,1,3)
         ipd_real = ipd[:,:,:,0]
         ipd_image = ipd[:,:,:,1]
-        ipd_final = torch.cat((ipd_real,ipd_image),dim=2)
-        return ipd_final
+        result = torch.cat((ipd_real,ipd_image),dim=2)
+        if self.is_doa:
+            result = self.ipd2doa(result)
+        return result
 
 class FN_lightning(nn.Module):
     def __init__(self):
