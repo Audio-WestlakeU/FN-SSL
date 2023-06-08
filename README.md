@@ -4,8 +4,8 @@ A python implementation of "FN-SSL: Full-Band and Narrow-Band Fusion for Sound S
 + **Contributions** 
   - Full-Band and Narrow-Band Fusion for moving sound source localization,
 + **Extension to microphone array with the number of microphones larger than two**: 
-  - for DP-IPD regression: set **is_doa = False** (Model.FN_SSL), and use mse loss. 
-  - for DOA classification: set **is_doa = True** (Model.FN_SSL), and use ce loss.
+  - for DP-IPD regression:  
+  - for DOA classification: 
 
 ## Datasets
 + **Source signals**: from <a href="http://www.openslr.org/12/" target="_blank">LibriSpeech database</a> 
@@ -14,10 +14,11 @@ A python implementation of "FN-SSL: Full-Band and Narrow-Band Fusion for Sound S
 ## Quick start
 + **Preparation** 
 
-Generate multi-channel data, You can set **data_num (in Simu.py)** to control the size of the dataset.
+Generate multi-channel data, You can set **data_num (in Simu.py)** to control the size of the dataset.  
 ```
 python Simu.py --train/--test/--dev
 ```
+
 + **Training**
 ```
 python Train.py --train --gpu-id [*] --bz * * * 
