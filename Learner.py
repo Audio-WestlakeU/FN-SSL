@@ -61,12 +61,17 @@ class Learner(ABC):
 	    """
 		pass
 
-	@abstractmethod
-	def loss(self, pred_batch, gt_batch):
+	def ce_loss(self, pred_batch, gt_batch):
 		""" To be implemented in each learner according to output of their models
         """
 		pass
 
+	@abstractmethod
+	def mse_loss(self, pred_batch, gt_batch):
+		""" To be implemented in each learner according to output of their models
+        """
+		pass
+	
 	@abstractmethod
 	def evaluate(self, pred, gt):
 		""" To be implemented in each learner according to output of their models
@@ -443,9 +448,25 @@ class SourceTrackingFromSTFTLearner(Learner):
 
 		return data # [Input, DOA, IPD, VAD]
 
-	def loss(self, pred_batch=None, gt_batch=None):
+	def ce_loss(self, pred_batch=None, gt_batch=None):
 		""" 
-		Function: Traning loss
+		Function: ce loss
+		Args:
+			pred_batch: doa
+			gt_batch: dict{'doa'}
+		Returns:
+			loss
+        """
+		pred_doa = pred_batch
+		gt_doa = gt_batch['doa'] * 180 / np.pi
+		gt_doa = gt_doa[:,:,1,:].type(torch.LongTensor).to(self.device)
+		nb,nt,_ = pred_doa.shape
+		pred_doa = pred_doa.to(self.device)
+		loss = torch.nn.functional.cross_entropy(pred_doa.reshape(nb*nt,-1),gt_doa.reshape(nb*nt))
+		return loss
+	def mse_loss(self, pred_batch=None, gt_batch=None):
+		""" 
+		Function: mse loss
 		Args:
 			pred_batch: ipd
 			gt_batch: dict{'ipd'}
@@ -460,7 +481,20 @@ class SourceTrackingFromSTFTLearner(Learner):
 
 		loss = torch.nn.functional.mse_loss(pred_ipd_rebatch.contiguous(), gt_ipd.contiguous())
 
-		return loss
+		return loss		
+	def predgt2DOA_cls(self, pred_batch=None, gt_batch=None):
+		""" 
+		Function: pred to doa of classification
+		Args:
+			pred_batch: doa classification
+		Returns:
+			loss
+        """		
+		if pred_batch is not None:
+			pred_batch = pred_batch.detach()
+			DOA_batch_pred = torch.argmax(pred_batch,dim=-1) # distance = 1 (nb, nt, 2)    
+			pred_batch = [DOA_batch_pred[:, :, np.newaxis, np.newaxis]]  # !! only for single source
+		return pred_batch, gt_batch
 
 	def predgt2DOA(self, pred_batch=None, gt_batch=None, time_pool_size=None):
 		"""
