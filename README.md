@@ -2,10 +2,11 @@
 A python implementation of "FN-SSL: Full-Band and Narrow-Band Fusion for Sound Source Localization" (paper: https://arxiv.org/pdf/2305.19610.pdf), INTERSPEECH, 2023. (A simple version, more detailed introduction will be updated soon)
 
 + **Contributions** 
-  - Full-Band and Narrow-Band Fusion for moving sound source localization,
+  - Full-Band and Narrow-Band Fusion for moving sound source localization, the full-band layers focus on learning the inter-frequency dependencies of spatial/localization cues. The narrow-band layers focus on exploiting these narrowband inter-channel information. Meanwhile, FNSSL has good generalization ability on real datasets.
+
 + **Extension to microphone array with the number of microphones larger than two**: 
-  - for DP-IPD regression:  
-  - for DOA classification: 
+  - for DP-IPD regression:  You can refer to our SRPDNN which is a 12-mic array.
+  - for DOA classification: Modifying the dimensions of LSTM input data can extension to microphone array with more microphones.
 
 ## Datasets
 + **Source signals**: from <a href="http://www.openslr.org/12/" target="_blank">LibriSpeech database</a> 
