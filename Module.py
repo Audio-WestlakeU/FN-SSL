@@ -155,7 +155,7 @@ class getMetric(nn.Module):
 			corr_flag = ((azi_error < ae_TH)+0.0) * vad_est # Accorrding to azimuth error
 			act_flag = 1*vad_gt
 			K_corr = torch.sum(corr_flag) 
-			print(torch.sum(corr_flag),torch.sum(act_flag)) 
+
 			ACC = torch.sum(corr_flag) / torch.sum(act_flag)
 			MAE = []
 			if 'ele' in ae_mode:
@@ -168,7 +168,7 @@ class getMetric(nn.Module):
 
 			MAE = torch.tensor(MAE)
 			metric = {}
-			metric['ACC'] = ACC
+			metric['ACC'] = torch.tensor([ACC])
 			metric['MAE'] = MAE
 			# metric = [ACC, MAE]
 
