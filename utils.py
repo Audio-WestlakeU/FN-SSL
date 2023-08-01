@@ -163,7 +163,28 @@ def load_file(acoustic_scene, sig_path, acous_path):
     elif (sig_path is None) & (acous_path is not None):
         return acoustic_scene
 
-
+def locata_plot(result_path, save_fig_path, bias=4):
+    plt.figure(figsize=(16,8),dpi=300)
+    for k in range(12):   
+        doa_gt = np.load(result_path+str(k)+'_gt.npy')
+        doa_est = np.load(result_path+str(k)+'_est.npy')-bias
+        vad_gt = np.load(result_path+str(k)+'_vadgt.npy')
+        vad_gt[vad_gt<2/3] = -1
+        vad_gt[vad_gt>2/3] = 1
+        for i in range(1):
+            plt.subplot(3,4,k+1)
+            plt.subplots_adjust(left=None, bottom=None, right=None, top=None,
+                    wspace=0.3, hspace=0.3)
+            x = [j*4096/16000 for j in range(doa_gt.shape[1])]
+            plt.scatter(x,doa_gt[i,:,1,0],s=5,c='grey',linewidth=0.8,label='GT')
+            plt.scatter(x,doa_est[i,:,1,0]*vad_gt[i,:,0],s=3,c='firebrick',linewidth=0.8,label='EST')
+            #plt.scatter(x,doa_est[i,:,1,0],s=3,c='firebrick',linewidth=0.8,label='EST')
+            plt.xlabel('Time [s]')
+            plt.ylabel('DOA[°]')
+            plt.ylim((0,180))
+            plt.grid()
+            plt.legend(loc=0,prop={'size': 4})
+    plt.savefig(save_fig_path + 'locata_fig.jpg')   
 
 
 # def angular_error_2d(pred, true, doa_mode='azi'):
