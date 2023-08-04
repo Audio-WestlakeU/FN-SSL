@@ -216,7 +216,7 @@ class Learner(ABC):
 			return pred_batch, gt_batch, mic_sig_batch
 
 
-	def predict(self, dataset, wDNN=True, return_predgt=False, metric_setting=None):
+	def predict(self, dataset, wDNN=True, return_predgt=False, metric_setting=None,save_file=False):
 		""" 
 		Function: Predict 
 		Args:
@@ -247,7 +247,10 @@ class Learner(ABC):
 				# print(mic_sig_batch.shape)
 
 				if (metric_setting is not None):
-					metric_batch = self.evaluate(pred=pred_batch, gt=gt_batch)
+					if save_file:
+						metric_batch = self.evaluate(pred=pred_batch, gt=gt_batch,metric_setting=metric_setting, idx=idx)
+					else:
+						metric_batch = self.evaluate(pred=pred_batch, gt=gt_batch,metric_setting=metric_setting)
 				if return_predgt:
 					pred += [pred_batch]
 					gt += [gt_batch]
@@ -550,7 +553,7 @@ class SourceTrackingFromSTFTLearner(Learner):
 
 		return pred_batch, gt_batch 
 
-	def evaluate(self, pred, gt, metric_setting={'ae_mode':['azi'], 'ae_TH':5, 'useVAD':True, 'vad_TH':[2/3, 2/3], 'metric_unfold':False} ):
+	def evaluate(self, pred, gt, metric_setting={'ae_mode':['azi'], 'ae_TH':5, 'useVAD':True, 'vad_TH':[2/3, 2/3], 'metric_unfold':False},idx=None ):
 		""" 
 		Function: Evaluate DOA estimation results
 		Args:
@@ -565,7 +568,11 @@ class SourceTrackingFromSTFTLearner(Learner):
 		doa_pred = pred['doa'] * 180 / np.pi 
 		vad_gt = gt['vad_sources']  
 		vad_pred = pred['vad_sources'] 
-
+		if idx != None:
+			save_path = './locata_result/'
+			np.save(save_path+str(idx)+'_gt',doa_gt.cpu().numpy())
+			np.save(save_path+str(idx)+'_est',doa_pred.cpu().numpy())
+			np.save(save_path+str(idx)+'_vadgt',vad_gt.cpu().numpy())
 		# single source 
 		# metric = self.getmetric(doa_gt, vad_gt, doa_pred, vad_pred, ae_mode = ae_mode, ae_TH=ae_TH, useVAD=False, vad_TH=vad_TH, metric_unfold=Falsemetric_unfold)
 
