@@ -484,7 +484,8 @@ class SourceTrackingFromSTFTLearner(Learner):
 
 		loss = torch.nn.functional.mse_loss(pred_ipd_rebatch.contiguous(), gt_ipd.contiguous())
 
-		return loss		
+		return loss
+		
 	def predgt2DOA_cls(self, pred_batch=None, gt_batch=None):
 		""" 
 		Function: pred to doa of classification
@@ -496,8 +497,40 @@ class SourceTrackingFromSTFTLearner(Learner):
 		if pred_batch is not None:
 			pred_batch = pred_batch.detach()
 			DOA_batch_pred = torch.argmax(pred_batch,dim=-1) # distance = 1 (nb, nt, 2)    
-			pred_batch = [DOA_batch_pred[:, :, np.newaxis, np.newaxis]]  # !! only for single source
+			pred_batch = {}
+			pred_batch['doa'] = DOA_batch_pred[:, :, np.newaxis, np.newaxis].to(self.device)
+			nbatch, nt, naziele, nsources = pred_batch['doa'].shape
+			pred_batch['vad_sources'] = torch.ones((nbatch,nt, nsources)).to(self.device)
+
 		return pred_batch, gt_batch
+	
+	def evaluate_cls(self, pred, gt, metric_setting={'ae_mode':['azi'], 'ae_TH':5, 'useVAD':True, 'vad_TH':[2/3, 2/3], 'metric_unfold':False},idx=None ):
+		""" 
+		Function: Evaluate DOA estimation results
+		Args:
+			pred 	- dict{'doa', 'vad_sources'}
+			gt 		- dict{'doa', 'vad_sources'}
+							doa (nb, nt, 2, nsources) in radians
+							vad (nb, nt, nsources) binary values
+		Returns:
+			metric
+        """
+		doa_gt = gt['doa'] * 180 / np.pi  
+		doa_pred = pred['doa'] 
+		doa_pred = torch.cat((doa_pred,doa_pred),dim=-2).to(self.device)
+		vad_gt = gt['vad_sources']
+		vad_pred = pred['vad_sources']
+		if idx != None:
+			save_path = './locata_result/'
+			np.save(save_path+str(idx)+'_gt',doa_gt.cpu().numpy())
+			np.save(save_path+str(idx)+'_est',doa_pred.cpu().numpy())
+			np.save(save_path+str(idx)+'_vadgt',vad_gt.cpu().numpy())
+		metric = \
+			self.getmetric(doa_gt, vad_gt, doa_pred, vad_pred, 
+				ae_mode = metric_setting['ae_mode'], ae_TH=metric_setting['ae_TH'], 
+				useVAD=metric_setting['useVAD'], vad_TH=metric_setting['vad_TH'], 
+				metric_unfold=metric_setting['metric_unfold'])
+		return metric
 
 	def predgt2DOA(self, pred_batch=None, gt_batch=None, time_pool_size=None):
 		"""
