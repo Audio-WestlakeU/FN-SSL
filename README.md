@@ -1,5 +1,5 @@
 # FN-SSL
-A python implementation of <a href="https://arxiv.org/pdf/2305.19610.pdf" target="_blank"> "FN-SSL: Full-Band and Narrow-Band Fusion for Sound Source Localization" </a>, INTERSPEECH, 2023. (A simple version, more detailed introduction will be updated soon)
+A python implementation of <a href="https://arxiv.org/pdf/2305.19610.pdf" target="_blank"> "FN-SSL: Full-Band and Narrow-Band Fusion for Sound Source Localization" </a>, INTERSPEECH, 2023. 
 
 + **Contributions** 
   - Full-Band and Narrow-Band Fusion for moving sound source localization, the full-band layers focus on learning the inter-frequency dependencies of spatial/localization cues. The narrow-band layers focus on exploiting these narrowband inter-channel information. Meanwhile, FNSSL has good generalization ability on real datasets.
