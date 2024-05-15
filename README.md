@@ -1,4 +1,4 @@
-# Full-band and Narrow-band fusion for SSL
+# Full-band and Narrow-band fusion Network for SSL
 ![](https://markdown.liuchengtu.com/work/uploads/upload_428e0c0d47c467f17821fd116edbc41f.png)
 
 ## Introduction
