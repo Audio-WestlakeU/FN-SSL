@@ -1,18 +1,18 @@
-# FN-SSL
-A python implementation of <a href="https://arxiv.org/pdf/2305.19610.pdf" target="_blank"> "FN-SSL: Full-Band and Narrow-Band Fusion for Sound Source Localization" </a>, INTERSPEECH, 2023. 
+# Full-band and Narrow-band fusion for SSL
+![](https://markdown.liuchengtu.com/work/uploads/upload_428e0c0d47c467f17821fd116edbc41f.png)
 
-+ **Contributions** 
-  - Full-Band and Narrow-Band Fusion for moving sound source localization, the full-band layers focus on learning the inter-frequency dependencies of spatial/localization cues. The narrow-band layers focus on exploiting these narrowband inter-channel information. Meanwhile, FNSSL has good generalization ability on real datasets.
-
-+ **Extension to microphone array with the number of microphones larger than two**: 
-  - for DP-IPD regression:  You can refer to our <a href="https://github.com/BingYang-20/SRP-DNN" target="_blank">SRP-DNN</a>  which is a 12-mic array.
-  - for DOA classification: Modifying the dimensions of LSTM input data can extension to microphone array with more microphones.
-
+## Introduction
+This repository provides methods which  based on full-band and narrow-band fusion network  for sound source localization. The narrow-band module processes the along-time sequences to focus on learning these narrow-band spatial information. The full-band module processes the along-frequency sequence
+to focus on learning the full-band correlation of spatial cues, such as the linear relation of DP-IPD to frequency.
+## Methods
+Two official implemented sound source localization methods are included:
+*  <a href="https://arxiv.org/pdf/2305.19610.pdf" target="_blank"> "FN-SSL: Full-Band and Narrow-Band Fusion for Sound Source Localization" </a>, INTERSPEECH, 2023. 
+*   <a href="https://arxiv.org/abs/2405.07021" target="_blank"> "IPDnet: A Universal Direct-Path IPD Estimation Network for Sound Source Localization" </a> 
 ## Datasets
 + **Source signals**: from <a href="http://www.openslr.org/12/" target="_blank">LibriSpeech database</a> 
 + **Real-world multi-channel microphone signals**: from <a href="https://www.locata.lms.tf.fau.de/datasets/" target="_blank">LOCATA database</a> 
   
-## Quick start
+## Quick start (will be update soon)
 + **Preparation** 
 
     * Download the required dataset and organize the data according to the data_org in the data folder.
