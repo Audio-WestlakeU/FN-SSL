@@ -1,8 +1,6 @@
 # Full-band and Narrow-band fusion Network for SSL
-<div align=center>
-<img src=https://markdown.liuchengtu.com/work/uploads/upload_428e0c0d47c467f17821fd116edbc41f.png) width="400"/>
-</div>
 
+![](https://markdown.liuchengtu.com/work/uploads/upload_428e0c0d47c467f17821fd116edbc41f.png)
 
 ## Introduction
 This repository provides methods which  based on full-band and narrow-band fusion network  for sound source localization. The narrow-band module processes the along-time sequences to focus on learning these narrow-band spatial information. The full-band module processes the along-frequency sequence
