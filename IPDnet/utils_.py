@@ -149,4 +149,19 @@ def set_random_seed(seed):
     np.random.seed(seed)
     random.seed(seed)
 
+def pad_segments(x, seg_len):
+    """ Pad the input tensor x to ensure the t-dimension is divisible by seg_len """
+    nb, nt, nf, nc = x.shape
+    pad_len = (seg_len - (nt % seg_len)) % seg_len  
+    if pad_len > 0:
+        pad = torch.zeros(nb, pad_len, nf, nc, device=x.device, dtype=x.dtype) 
+        x = torch.cat([x, pad], dim=1)  
+    return x
 
+def split_segments(x, seg_len):
+    """ Split the input tensor x along the t-dimension into segments of length seg_len """
+    nb, nt, nf, nc = x.shape
+    x = pad_segments(x, seg_len)  # Pad the input to make it divisible by seg_len
+    nt_padded = x.shape[1]  # New time dimension after padding
+    x = x.reshape(nb, nt_padded // seg_len, seg_len, nf, nc)  # Reshape into segments
+    return x

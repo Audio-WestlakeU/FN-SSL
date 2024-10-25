@@ -3,7 +3,7 @@ import torch.nn as nn
 import numpy as np
 import Module as at_module
 import math
-
+from utils_ import pad_segments,split_segments
 class FNblock(nn.Module):
     """
     The implementation of the full-band and narrow-band fusion block
@@ -77,7 +77,7 @@ class IPDnet(nn.Module):
     '''
     The implementation of the IPDnet
     '''
-    def __init__(self,input_size=4,hidden_size=128,max_track=2,is_online=True):
+    def __init__(self,input_size=4,hidden_size=128,max_track=2,is_online=True,n_seg=312):
         super(IPDnet, self).__init__()
         self.is_online = is_online
         self.input_size = input_size
@@ -87,11 +87,18 @@ class IPDnet(nn.Module):
         self.cnn_out_dim = 2 * ((input_size // 2) - 1) * max_track
         self.cnn_inp_dim = hidden_size + input_size
         self.conv = CausCnnBlock(inp_dim = self.cnn_inp_dim, out_dim = self.cnn_out_dim)   
-            
-    def forward(self,x):
+        self.n = n_seg
+    def forward(self,x,offline_inference=False):
         
         x = x.permute(0,3,2,1)
         nb,nt,nf,nc = x.shape
+        ou_frame = nt//12
+        # chunk-wise inference for offline 
+        if not self.is_online and offline_inference:
+            x = split_segments(x, self.n)  # Split into segments of length n
+            nb,nseg,seg_nt,nf,nc = x.shape
+            x = x.reshape(nb*nseg,seg_nt,nf,nc)
+            nb,nt,nf,nc = x.shape        
         
         # reshaping the input
         fb_skip = x.reshape(nb*nt,nf,nc)
@@ -105,7 +112,11 @@ class IPDnet(nn.Module):
         
         nt2 = nt//12
         x = self.conv(x).permute(0,3,2,1).reshape(nb,nt2,nf,2,-1).permute(0,1,3,2,4)
-        output = x.reshape(nb,nt2,2,nf*2,-1).permute(0,1,3,4,2)
+        if not self.is_online and offline_inference: 
+            x = x.reshape(nb//nseg,nt2*nseg,2,nf*2,-1).permute(0,1,3,4,2)
+            output = x[:,:ou_frame,:,:,:]
+        else:
+            output = x.reshape(nb,nt2,2,nf*2,-1).permute(0,1,3,4,2)
         return output
   
 
