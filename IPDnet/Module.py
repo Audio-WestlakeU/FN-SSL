@@ -457,7 +457,7 @@ class PredDOA(nn.Module):
 		self.getmetric = getMetric(
             source_mode='multiple', metric_unfold=True)		
 	def forward(self,pred_batch, gt_batch,idx):
-		pred_batch,_= self.predgt2DOA(pred_batch = pred_batch, gt_batch = gt_batch)
+		pred_batch,_= self.pred2DOA(pred_batch = pred_batch, gt_batch = gt_batch)
 		metric = self.evaluate(pred_batch=pred_batch, gt_batch=gt_batch,idx=idx)
 		return metric
 	def pred2DOA(self, pred_batch, gt_batch):
