@@ -284,7 +284,6 @@ class LibriSpeechDataset(Dataset):
 				all_mask = np.ones(s.shape)
 				if random.random() > 0.7:
 					# a 0-2 s mask 
-
 					mask = int(random.random() * 2 * self.fs)
 					print(mask / self.fs)
 					mask_start = random.randint(0, s.shape[0]-mask)
