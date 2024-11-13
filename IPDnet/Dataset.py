@@ -204,7 +204,7 @@ class LibriSpeechDataset(Dataset):
 
 		return (s_clean, vad_out) if return_vad else s_clean
 
-	def __init__(self, path, T, fs, num_source, size=None, return_vad=False, readers_range=None, clean_silence=True):
+	def __init__(self, path, T, fs, num_source, size=None, return_vad=False, readers_range=None, clean_silence=True, stage='train'):
 		self.corpus = self._exploreCorpus(path, 'flac')
 		if readers_range is not None:
 			for key in list(map(int, self.nChapters.keys())):
@@ -232,7 +232,7 @@ class LibriSpeechDataset(Dataset):
 		self.clean_silence = clean_silence
 		self.return_vad = return_vad
 		self.vad = webrtcvad.Vad()
-
+		self.stage = stage
 		self.sz = len(self.chapterList) if size is None else size
 
 	def __len__(self):
@@ -280,7 +280,16 @@ class LibriSpeechDataset(Dataset):
 				if n >= len(chapter): n=0
 			s = s[0: int(self.T * fs)]
 			s -= s.mean()
+			if self.stage == 'train':
+				all_mask = np.ones(s.shape)
+				if random.random() > 0.7:
+					# a 0-2 s mask 
 
+					mask = int(random.random() * 2 * self.fs)
+					print(mask / self.fs)
+					mask_start = random.randint(0, s.shape[0]-mask)
+					all_mask[mask_start:mask_start+mask] = 0
+					s = s * all_mask
 			# Clean silences, it starts with the highest aggressiveness of webrtcvad,
 			# but it reduces it if it removes more than the 66% of the samples
 			s_clean, vad_out = self._cleanSilences(s, 3, return_vad=True)
@@ -968,4 +977,3 @@ class RandomTrajectoryDataset(Dataset):
 		acoustic_scene.source_vad = vad[:,0:num_source] # a mask
 
 		return acoustic_scene
-
