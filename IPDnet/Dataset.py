@@ -281,9 +281,9 @@ class LibriSpeechDataset(Dataset):
 			s = s[0: int(self.T * fs)]
 			s -= s.mean()
 			# adding overlap mode in training stage
-			if self.stage == 'train':
+			if self.stage == 'train' and self.num_source > 1:
 				all_mask = np.ones(s.shape)
-				if random.random() > 0.7 and self.num_source > 1:
+				if random.random() > 0.7:
 					# a 0-2 s mask 
 					mask = int(random.random() * 2 * self.fs)
 
