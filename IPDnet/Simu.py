@@ -41,7 +41,8 @@ sourceDataset = at_dataset.LibriSpeechDataset(
 	fs = fs,
 	num_source = max(args.sources), 
 	return_vad = True, 
-	clean_silence = True)
+	clean_silence = True,
+	stage = stage,)
 
 # Noise signal
 noiseDataset = at_dataset.NoiseDataset(
