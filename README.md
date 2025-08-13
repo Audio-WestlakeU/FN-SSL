@@ -17,6 +17,7 @@ Two official implemented sound source localization methods are included:
 ## Datasets
 
 + **Source signals**: from <a href="http://www.openslr.org/12/" target="_blank">LibriSpeech database</a>
++ **Noise source signals**: from <a href="http://spib.linse.ufsc.br/noise.html" target="_blank">Noise92</a>
 + **Real-world multi-channel microphone signals**: from <a href="https://www.locata.lms.tf.fau.de/datasets/" target="_blank">LOCATA database</a>
 
 ## Quick start (will be update soon)
