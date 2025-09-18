@@ -20,7 +20,7 @@ Thress official implemented sound source localization methods are included:
 + **Source signals**: from <a href="http://www.openslr.org/12/" target="_blank">LibriSpeech database</a>
 + **Noise source signals**: from <a href="http://spib.linse.ufsc.br/noise.html" target="_blank">Noise92</a>
 + **Real-world multi-channel microphone signals**: from <a href="https://www.locata.lms.tf.fau.de/datasets/" target="_blank">LOCATA database</a>
-+ **RealMAN dataset**: from <a href="[https://www.locata.lms.tf.fau.de/datasets/](https://github.com/Audio-WestlakeU/RealMAN)" target="_blank">RealMAN</a>
++ **RealMAN dataset**: from <a href="https://github.com/Audio-WestlakeU/RealMAN" target="_blank">RealMAN</a>
 ## Quick start (will be update soon)
 
 + **Preparation**
