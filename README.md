@@ -9,17 +9,18 @@ to focus on learning the full-band correlation of spatial cues, such as the line
 
 ## Methods
 
-Two official implemented sound source localization methods are included:
+Thress official implemented sound source localization methods are included:
 
 * <a href="https://arxiv.org/pdf/2305.19610.pdf" target="_blank"> "FN-SSL: Full-Band and Narrow-Band Fusion for Sound Source Localization" </a>, INTERSPEECH, 2023.
-* <a href="https://arxiv.org/abs/2405.07021" target="_blank"> "IPDnet: A Universal Direct-Path IPD Estimation Network for Sound Source Localization" </a>
+* <a href="https://arxiv.org/abs/2405.07021" target="_blank"> "IPDnet: A Universal Direct-Path IPD Estimation Network for Sound Source Localization" </a> TASLP, 2024
+* <a href="" target="_blank"> "IPDnet2: an efficient and improved inter-channel phase difference estimation network for sound source localization" </a> 
 
 ## Datasets
 
 + **Source signals**: from <a href="http://www.openslr.org/12/" target="_blank">LibriSpeech database</a>
 + **Noise source signals**: from <a href="http://spib.linse.ufsc.br/noise.html" target="_blank">Noise92</a>
 + **Real-world multi-channel microphone signals**: from <a href="https://www.locata.lms.tf.fau.de/datasets/" target="_blank">LOCATA database</a>
-
++ **RealMAN dataset**: from <a href="[https://www.locata.lms.tf.fau.de/datasets/](https://github.com/Audio-WestlakeU/RealMAN)" target="_blank">RealMAN</a>
 ## Quick start (will be update soon)
 
 + **Preparation**
