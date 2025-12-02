@@ -1,3 +1,10 @@
+"""
+This file is a modified and extended version of the original `acousticTrackingDataset.py` created by David Díaz-Guerra.
+Original repositories:
+    - Cross3D: https://github.com/DavidDiazGuerra/Cross3D
+    - icoCNN: https://github.com/DavidDiazGuerra/icoCNN
+We gratefully acknowledge the author's work, which provided the foundation for the dataset generation and simulation procedures used here.
+"""
 import numpy as np
 import os
 import scipy
