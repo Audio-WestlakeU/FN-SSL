@@ -259,7 +259,7 @@ class RealData(Dataset):
 					elif overlap_mode_idx == 2:
 						for spk_id in range(self.max_source):
 							if spk_id == 0:
-								mask_len = rng.integers(20,40)
+								mask_len = rng.integers(20,35)
 								mask_half = (40 - mask_len) / 2
 								dp_vad_list[spk_id][:int(mask_half)] = 0
 								mic_signal_list[spk_id][:int(1600*mask_half),:] = 0
