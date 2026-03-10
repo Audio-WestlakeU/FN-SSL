@@ -913,7 +913,7 @@ class RandomTrajectoryDataset(Dataset):
 
 		# Trajectory points
 		src_pos_min = np.array([0.0, 0.0, 0.0])
-		src_pos_max = room_sz
+		src_pos_max = deepcopy(room_sz)
 		if self.array_setup.arrayType == 'linear':
 			if np.sum(self.array_setup.orV) > 0:
 				src_pos_min[np.nonzero(self.array_setup.orV)] = array_pos[np.nonzero(self.array_setup.orV)]
